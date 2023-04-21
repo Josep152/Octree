@@ -28,45 +28,40 @@ int main(int argc, char* argv[]) {
 using namespace std;
 
 int main() {
-  fstream newfile;
-  newfile.open("../dama_octal.txt",ios::in); //open a file to perform read operation using file object
-  string line;
-  int i = 0;
   double x_max, y_max, z_max;
   double x_min, y_min, z_min;
-  stringstream linestream;
-  linestream << line;
-  linestream >> x_max >> y_max >> z_max;
-  x_min = x_max;
-  y_min = y_max;
-  z_min = z_max;
+  pre_pro(x_min, y_min, z_min, x_max, y_max, z_max);
   
-  while (getline(newfile, line))
-  {
-    double x, y, z;
-    stringstream linestream;
-    linestream << line;
-    linestream >> x >> y >> z;
-    if( x > x_max )
-        x_max = x;
-    if( y > y_max )
-        y_max = y;
-    if( z > z_max )
-        z_max = z;
-    if( x < x_min )
-        x_min = x;
-    if( y < y_min )
-        y_min = y;
-    if( z < z_min )
-        z_min = z;
-    i++; 
-  }
-  //Creamos el octre con los maximos y menores puntos posibles hallados, para que todos los puntos se encuentren dentro del mismo
-  Point min_p(x_min, y_min, z_min);
-  Point max_p(x_max, y_max, z_max); 
+  Point min_p(x_min, y_min, z_min);   //Creamos el octre con los maximos y menores puntos posibles hallados
+  Point max_p(x_max, y_max, z_max);   //para que todos los puntos se encuentren dentro del mismo
   Octree my_oct;
   my_oct.insert(min_p);
   my_oct.insert(max_p);
+
+  fstream newfile;
+  newfile.open("../dama_octal.txt",ios::in); //open a file to perform read operation using file object
+  string line;
+  stringstream linestream;
+
+  double x, y, z;
+  int i = 0;
+  while (getline(newfile, line))
+  {
+      stringstream linestream;
+      linestream << line;
+      linestream >> x >> y >> z;
+      Point _pp(x,y,z);
+      my_oct.insert(_pp);
+      i++;
+  }
   newfile.close();
+
+  fstream newfile1;
+  newfile1.open("../cubes.txt",ios::out);  // open a file to perform write operation using file object
+  my_oct.write_LeftBottom(newfile1);
+  newfile1.close();
+
+  cout << "Done\n";
+
   return 0;
 }

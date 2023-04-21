@@ -3,11 +3,14 @@
 //#include <bits/stdc++.h>
 #include <iostream>
 #include <stdlib.h>
+#include <fstream>
+#include <sstream>
+#include <string>
 #include <math.h>
 
 using namespace std;
 
-#define G 100     //G granularidad
+#define G 200     //G granularidad
 
 struct Point {
     double x,y,z;
@@ -25,6 +28,10 @@ struct Point {
         Point rpta;
         rpta.x = x - a.x; rpta.y = y - a.y; rpta.z = z - a.z;
         return rpta;
+    }
+    bool operator==(Point a) {
+        if (x == a.x && y == a.y && z == a.z) { return true; }
+        return false;
     }
     double disEu (Point a) {
         return sqrt(pow(x - a.x, 2) + pow(y - a.y, 2) + pow(z - a.z, 2));
@@ -81,8 +88,9 @@ public:
             children[i] = nullptr;
         }
         points = new Point[G];
+        this->isLeaf = true;
         this->nPoints = 0;
-        cout << "Octree created!\n";
+        //cout << "Octree created!\n";
     }
 
     // TDD: Test Driven Development
@@ -95,24 +103,22 @@ public:
         }
     }
     void insert(const Point &point ) {
-        if (isLeaf && nPoints + 1 == G) {
+        if (isLeaf && nPoints == G) {
             explote();
             this->nPoints = 0;
             this->isLeaf = false;
         }
         if( isLeaf && nPoints == 0 ){
             points[nPoints++] = point;
-            this->nPoints++;
             h = 0;
             leftBottom = point;
         }
         else if( isLeaf && nPoints < G ) {
             points[nPoints++] = point;
-            this->nPoints++;
             Point minPoint = getMinPoint(points, nPoints);
             Point maxPoint = getMaxPoint(points, nPoints);
             h = (minPoint-maxPoint).max_cord();
-            cout << "h -> " << h << endl;
+            //cout << "h -> " << h << endl;
             leftBottom = minPoint;
 
         }
@@ -191,11 +197,11 @@ public:
 
     //caso básico: hoja
     //caso no es hoja
-    /*bool exist(const Point &point) {
+    bool exist(const Point &point) {
         if( isLeaf ){
             for (int i = 0; i < nPoints; i++)
             {
-                if( point[i] == point )
+                if( points[i] == point )
                     return true;   
             }
             return false;
@@ -206,22 +212,57 @@ public:
             if( point.x < midX ) {
                 if( point.y < midY ) {
                     if( point.z < midZ ) {
-                        return children[0].exist(point);
+                        return children[0]->exist(point);
                     }
                     else {
+                        return children[1]->exist(point);
                     }
                 }
                 else {
-
+                    if( point.z < midZ ) {
+                        return children[2]->exist(point);
+                    }
+                    else {
+                        return children[3]->exist(point);
+                    }
                 }
             }
             else {
-
+                if( point.y < midY ) {
+                    if( point.z < midZ ) {
+                        return children[4]->exist(point);
+                    }
+                    else {
+                        return children[5]->exist(point);
+                    }
+                }
+                else {
+                    if( point.z < midZ ) {
+                        return children[6]->exist(point);
+                    }
+                    else {
+                        return children[7]->exist(point);
+                    }
+                }
             }
         }
     }
 
-   Point closestPoint(const Point &point) {
+    void write_LeftBottom(fstream& _newfile) {
+        if(_newfile.is_open()) //checking whether the file is open 
+            if (this->isLeaf) {
+                //cout << leftBottom.x << ' ' << leftBottom.y << ' ' << leftBottom.z << ' ' << h << "  cant -> " << nPoints << endl;
+                _newfile << leftBottom.x << ' ' << leftBottom.y << ' ' << leftBottom.z << ' ' << h << endl;
+                return;
+            }
+            for (int i = 0; i < 8; i++) {
+                if (children[i] != nullptr) {
+                    children[i]->write_LeftBottom(_newfile);
+                }
+            }
+    }
+
+   /*Point closestPoint(const Point &point) {
     if( isLeaf ){
         double dist = distancia( point, points[0]);
         Point closest = point[0];
@@ -241,5 +282,38 @@ public:
 
 
 };
+
+void pre_pro(double& x_min, double& y_min, double& z_min, double& x_max, double& y_max, double& z_max) {
+    fstream newfile;
+    newfile.open("../dama_octal.txt",ios::in); //open a file to perform read operation using file object
+    string line;
+    stringstream linestream;
+    linestream << line;
+    linestream >> x_max >> y_max >> z_max;
+    x_min = x_max;
+    y_min = y_max;
+    z_min = z_max;
+    
+    while (getline(newfile, line))
+    {
+        double x, y, z;
+        stringstream linestream;
+        linestream << line;
+        linestream >> x >> y >> z;
+        if( x > x_max )
+            x_max = x;
+        if( y > y_max )
+            y_max = y;
+        if( z > z_max )
+            z_max = z;
+        if( x < x_min )
+            x_min = x;
+        if( y < y_min )
+            y_min = y;
+        if( z < z_min )
+            z_min = z;
+    }
+    newfile.close();
+}
 
 #endif
